@@ -73,16 +73,20 @@ function s.spop3(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		local tc=g:GetFirst()
 		local lv=tc:GetLevel()
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_LEVEL)
-		e1:SetValue(-2)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-		tc:RegisterEffect(e1)
-		-- Special Summon token
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-   			local token=Duel.CreateToken(tp,1000000312)
-    	Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP_DEFENSE)  -- ahora se invoca face-up
+		if lv>=3 then
+			local newlv=lv-2
+			-- Cambia su Nivel directamente
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_CHANGE_LEVEL)
+			e1:SetValue(newlv)
+			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+		end
+		-- Luego invoca el token
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsPlayerCanSpecialSummonMonster(tp,1000000312,0,TYPES_TOKEN,2000,2000,2,RACE_WARRIOR,ATTRIBUTE_LIGHT) then
+			local token=Duel.CreateToken(tp,1000000312)
+			Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
 		end
 	end
 end
