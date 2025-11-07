@@ -24,7 +24,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	--Add 1 Spell/Trap that mentions "Slifer the Sky Dragon" at the end of the Damage Step
+	--Add 1 Spell/Trap that mentions "Slifer the Sky Dragon"
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -38,8 +38,8 @@ function s.initial_effect(c)
 end
 
 --Listed names and archetype
-s.listed_names={10000020,31709826} -- Slifer the Sky Dragon, Revival Jam
-s.listed_series={0x54b} -- Slime archetype
+s.listed_names={10000020,31709826}
+s.listed_series={0x54b}
 
 ---------------------------------------------------------------
 -- (3) Special Summon from hand or GY
@@ -58,22 +58,17 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
-	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 and c:IsSummonLocation(LOCATION_HAND) then
-		--Swap original ATK and DEF of all face-up monsters
+	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0
+		and c:IsSummonLocation(LOCATION_HAND) then
+
+		-- SAFE SWAP ATK/DEF (does NOT touch base values)
 		local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 		for tc in aux.Next(g) do
-			local atk=tc:GetBaseAttack()
-			local def=tc:GetBaseDefense()
 			local e1=Effect.CreateEffect(c)
 			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_SET_BASE_ATTACK)
-			e1:SetValue(def)
+			e1:SetCode(EFFECT_SWAP_AD)
 			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 			tc:RegisterEffect(e1)
-			local e2=e1:Clone()
-			e2:SetCode(EFFECT_SET_BASE_DEFENSE)
-			e2:SetValue(atk)
-			tc:RegisterEffect(e2)
 		end
 	end
 end
@@ -91,7 +86,9 @@ function s.thfilter(c)
 	return c:IsSpellTrap() and c:ListsCode(10000020) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then 
+		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
+	end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
