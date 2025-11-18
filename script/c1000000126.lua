@@ -1,178 +1,124 @@
---Solar the Sun Priestess
+--Solar Ascendant Priestess
 local s,id=GetID()
 function s.initial_effect(c)
-
--- Listados (para búsquedas y compatibilidad)
-s.listed_names={10000000,10000020,10000010} -- Obelisk, Slifer, Ra
-s.listed_series={}
-
-    ---------------------------------------
-    -- ① SS from hand only (Quick Effect)
-    ---------------------------------------
+    ----------------------------------------
+    -- ① Special Summon itself from hand (Main Phase)
+    ----------------------------------------
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-    e1:SetType(EFFECT_TYPE_QUICK_O)
-    e1:SetCode(EVENT_FREE_CHAIN)
+    e1:SetType(EFFECT_TYPE_IGNITION) -- cambiado de QUICK_O a IGNITION
     e1:SetRange(LOCATION_HAND)
-    e1:SetCountLimit(1,id)
+    e1:SetCondition(s.spcon)
     e1:SetTarget(s.sptg)
     e1:SetOperation(s.spop)
+    e1:SetCountLimit(1,id)
     c:RegisterEffect(e1)
 
-    ---------------------------------------
-    -- ② On Summon: Optional SS Azure / Crimson
-    ---------------------------------------
+    ----------------------------------------
+    -- ② Reveal; send Ra or S/T mentioning Ra from hand or Deck
+    ----------------------------------------
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
-    e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
-    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-    e2:SetProperty(EFFECT_FLAG_DELAY)
-    e2:SetCode(EVENT_SUMMON_SUCCESS)
+    e2:SetCategory(CATEGORY_TOGRAVE)
+    e2:SetType(EFFECT_TYPE_IGNITION)
+    e2:SetRange(LOCATION_HAND)
+    e2:SetTarget(s.tgtg)
+    e2:SetOperation(s.tgop)
     e2:SetCountLimit(1,{id,1})
-    e2:SetTarget(s.sumtg)
-    e2:SetOperation(s.sumop)
     c:RegisterEffect(e2)
-    local e2b=e2:Clone()
-    e2b:SetCode(EVENT_SPSUMMON_SUCCESS)
-    c:RegisterEffect(e2b)
 
-    ---------------------------------------
-    -- ③ Protection if Tributed for Obelisk / Slifer / Ra
-    ---------------------------------------
+    ----------------------------------------
+    -- ③ On Normal/Special Summon: Set Ra S/T from Deck or GY, can activate this turn
+    ----------------------------------------
     local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-    e3:SetCode(EVENT_BE_MATERIAL)
-    e3:SetCondition(s.immcon)
-    e3:SetOperation(s.immop)
+    e3:SetDescription(aux.Stringid(id,2))
+    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+    e3:SetCode(EVENT_SUMMON_SUCCESS)
+    e3:SetProperty(EFFECT_FLAG_DELAY)
+    e3:SetCountLimit(1,{id,2})
+    e3:SetTarget(s.settg)
+    e3:SetOperation(s.setop)
     c:RegisterEffect(e3)
-
+    local e4=e3:Clone()
+    e4:SetCode(EVENT_SPSUMMON_SUCCESS)
+    c:RegisterEffect(e4)
 end
-
----------------------------------------
--- ① SS from hand only
----------------------------------------
+s.listed_names={10000010}
+----------------------------------------
+-- ① Special Summon from hand
+----------------------------------------
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsMainPhase()
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then
+    local c=e:GetHandler()
+    if chk==0 then 
         return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
+            and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
     end
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,tp,LOCATION_HAND)
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-        -- Cannot Special Summon from Extra Deck this turn
-        local e1=Effect.CreateEffect(c)
-        e1:SetType(EFFECT_TYPE_FIELD)
-        e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-        e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH)
-        e1:SetTargetRange(1,0)
-        e1:SetTarget(function(e,c) return c:IsLocation(LOCATION_EXTRA) end)
-        e1:SetReset(RESET_PHASE+PHASE_END)
-        Duel.RegisterEffect(e1,tp)
+    if c:IsRelateToEffect(e) then
+        Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
     end
 end
 
----------------------------------------
--- IDs of Azure / Crimson
----------------------------------------
-local AZURE_ID   = 1000000127
-local CRIMSON_ID = 1000000128
-
----------------------------------------
--- IDs of the Egyptian Gods
----------------------------------------
-local OBELISK_ID = 10000000
-local SLIFER_ID  = 10000020
-local RA_ID      = 10000010
-
----------------------------------------
--- ② Target check
----------------------------------------
-function s.sumtg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then
-        local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
-        if ft<=0 then return false end
-
-        local canAzure = Duel.IsExistingMatchingCard(function(c) 
-            return c:IsCode(AZURE_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-        end,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
-
-        local canCrimson = Duel.IsExistingMatchingCard(function(c)
-            return c:IsCode(CRIMSON_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-        end,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
-
-        return canAzure or canCrimson
-    end
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
+----------------------------------------
+-- ② Reveal, then send Ra or Ra S/T to GY
+----------------------------------------
+function s.tgfilter(c)
+    return (
+        c:IsCode(10000010) or
+        (c:IsSpellTrap() and c:ListsCode(10000010))
+    ) and c:IsAbleToGrave()
 end
-
----------------------------------------
--- ② Operation: Choose Azure/Crimson
----------------------------------------
-function s.sumop(e,tp,eg,ep,ev,re,r,rp)
-    local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
-    if ft<=0 then return end
-    local toSummon=Group.CreateGroup()
-
-    -- Ask for Azure
-    if ft>#toSummon and Duel.IsExistingMatchingCard(function(c)
-        return c:IsCode(AZURE_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-    end,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil) then
-
-        if Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-            local g1=Duel.SelectMatchingCard(tp,function(c)
-                return c:IsCode(AZURE_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-            end,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil)
-            toSummon:Merge(g1)
-        end
-    end
-
-    -- Ask for Crimson
-    if ft>#toSummon and Duel.IsExistingMatchingCard(function(c)
-        return c:IsCode(CRIMSON_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-    end,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil) then
-
-        if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-            local g2=Duel.SelectMatchingCard(tp,function(c)
-                return c:IsCode(CRIMSON_ID) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-            end,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil)
-            toSummon:Merge(g2)
-        end
-    end
-
-    if #toSummon>0 then
-        Duel.SpecialSummon(toSummon,0,tp,tp,false,false,POS_FACEUP)
+function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then 
+        return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
     end
 end
-
----------------------------------------
--- ③ Protection for Gods
----------------------------------------
-function s.immcon(e,tp,eg,ep,ev,re,r,rp)
-    return (r&REASON_SUMMON)==REASON_SUMMON or (r&REASON_RELEASE)==REASON_RELEASE
-end
-
-function s.immop(e,tp,eg,ep,ev,re,r,rp)
+function s.tgop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    local rc=c:GetReasonCard()
-    if not rc then return end
+    --reveal itself
+    Duel.ConfirmCards(1-tp,c)
+    Duel.ShuffleHand(tp)
+    --send Ra / Ra S/T
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+    local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil)
+    if #g>0 then
+        Duel.SendtoGrave(g,REASON_EFFECT)
+    end
+end
 
-    -- Only for Egyptian Gods
-    if not rc:IsCode(OBELISK_ID,SLIFER_ID,RA_ID) then return end
-
-    -- Immunity to ACTIVATED monster effects from opponent (except DIVINE)
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_SINGLE)
-    e1:SetCode(EFFECT_IMMUNE_EFFECT)
-    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-    e1:SetValue(function(e,te)
-        return te:IsActiveType(TYPE_MONSTER)
-            and te:IsActivated()
-            and te:GetOwnerPlayer()~=e:GetHandlerPlayer()
-            and not te:GetHandler():IsAttribute(ATTRIBUTE_DIVINE)
-    end)
-    rc:RegisterEffect(e1)
+----------------------------------------
+-- ③ Set Ra S/T from Deck or GY; allow activation this turn
+----------------------------------------
+function s.setfilter(c)
+    return c:IsSpellTrap() and c:ListsCode(10000010) and c:IsSSetable()
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then 
+        return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil)
+    end
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+    local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
+    local tc=g:GetFirst()
+    if tc then
+        Duel.SSet(tp,tc)
+        --allow activation this turn (Quick-Play & Trap)
+        local e1=Effect.CreateEffect(e:GetHandler())
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_QP_ACT_IN_SET_TURN)
+        e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+        tc:RegisterEffect(e1)
+        local e2=e1:Clone()
+        e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+        tc:RegisterEffect(e2)
+    end
 end
