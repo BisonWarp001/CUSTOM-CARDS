@@ -7,7 +7,7 @@ function s.initial_effect(c)
     c:EnableReviveLimit()
 
     -------------------------------------
-    -- ① Detach 1: Special Summon banished monster
+    -- ① Detach 1: Special Summon 1 banished monster
     -------------------------------------
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
@@ -22,7 +22,8 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 
     -------------------------------------
-    -- ② If sent to GY: Add 1 monster from GY to hand
+    -- ② If sent to GY: Add 1 monster from GY to hand,
+    -- except "Returner of the Forgotten"
     -------------------------------------
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
@@ -72,15 +73,16 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -------------------------------------
--- TARGET: Add 1 monster from GY to hand
+-- TARGET: Add 1 monster from GY to hand,
+-- except itself
 -------------------------------------
-function s.thfilter(c)
-    return c:IsMonster() and c:IsAbleToHand()
+function s.thfilter(c,id)
+    return c:IsMonster() and c:IsAbleToHand() and not c:IsCode(id)
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then 
-        return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE,0,1,nil) 
+        return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE,0,1,nil,id) 
     end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_GRAVE)
 end
@@ -90,7 +92,7 @@ end
 -------------------------------------
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-    local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+    local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_GRAVE,0,1,1,nil,id)
     if #g>0 then
         Duel.SendtoHand(g,nil,REASON_EFFECT)
         Duel.ConfirmCards(1-tp,g)
