@@ -1,6 +1,6 @@
 --Wrath of the Heavens
---Scripted by mike warp & GPT-5
 local s,id=GetID()
+s.listed_names={10000020}
 function s.initial_effect(c)
 	--Cannot be negated
 	local e0=Effect.CreateEffect(c)

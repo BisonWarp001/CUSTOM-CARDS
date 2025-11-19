@@ -1,14 +1,15 @@
 --God's Anger
 --The activation of this card, or its effects, cannot be negated, nor can its effects be negated.
 --① When this card is activated: You can add 1 DIVINE monster from your Deck, GY or banishment to your hand. Once per turn, you can: Immediately after this effect resolves, Normal Summon 1 DIVINE monster. 
---② The control of Tribute Summoned monsters whose original names are "Slifer the Sky Dragon", "Obelisk the Tormentor", and "The Winged Dragon of Ra" cannot switch, also your opponent cannot Tribute or use them as material, and they are unaffected by your opponent's card effects.
+--② The control of Tribute Summoned monsters whose original names are "Slifer the Sky Dragon", "Obelisk the Tormentor", and "The Winged Dragon of Ra" cannot switch, also your opponent cannot Tribute or use them as material, and
+--they are unaffected by your opponent's card effects.
 --③ If a DIVINE monster(s) you control attacks, your opponent's cards and effects cannot be activated until the end of the Damage Step. 
 --④ You can only activate 1 "God's Anger" per turn. 
---Scripted by mike warp & GPT-5
 local s,id=GetID()
 local PROT = EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CANNOT_NEGATE+EFFECT_FLAG_CANNOT_INACTIVATE
 
 function s.initial_effect(c)
+s.listed_names = {10000000,10000010,10000020}
     --------------------------------
     --① Activate: search 1 DIVINE monster + optional Normal Summon (once per turn)
     --------------------------------

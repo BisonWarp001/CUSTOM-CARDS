@@ -1,5 +1,4 @@
 --Gargoyle Slime
---Scripted by Warp
 local s,id=GetID()
 local SET_SLIME=0x54b
 local TOKEN_SLIME_CUSTOM=79387393 -- Token custom registrado en la DB
@@ -44,7 +43,7 @@ function s.initial_effect(c)
 end
 
 --Listar cartas relacionadas
-s.listed_names={10000000,42166000,26905245,TOKEN_SLIME_CUSTOM}
+s.listed_names={10000000,42166000,TOKEN_SLIME_CUSTOM}
 s.listed_series={SET_SLIME}
 
 --① Condición de Invocación Especial

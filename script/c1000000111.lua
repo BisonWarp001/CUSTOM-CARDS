@@ -114,7 +114,8 @@ function s.sumsuc(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ------------------------------------------------------------
--- Tribute 2 to destroy + damage
+-- Tribute 2 to destroy + always inflict damage
+------------------------------------------------------------
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then 
@@ -122,28 +123,39 @@ function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	local g=Duel.SelectReleaseGroupCost(tp,aux.TRUE,2,2,false,nil,c)
 	Duel.Release(g,REASON_COST)
-	--Cannot attack this turn
+
+	-- Cannot attack this turn
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 	c:RegisterEffect(e1)
 end
+
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) end
+	if chk==0 then 
+		return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
+	end
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,e:GetHandler():GetAttack())
 end
+
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+
+	-- Destroy all opponent monsters
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
-	if #g==0 then return end
-	local ct=Duel.Destroy(g,REASON_EFFECT)
-	if ct<#g then
+	if #g>0 then
+		Duel.Destroy(g,REASON_EFFECT)
+	end
+
+	-- ALWAYS inflict damage equal to this card's ATK
+	if c:IsRelateToEffect(e) and c:GetAttack()>0 then
 		Duel.Damage(1-tp,c:GetAttack(),REASON_EFFECT)
 	end
 end
+
 
 ------------------------------------------------------------
 -- When leaves field: revive Obelisk or add Divine Evolution

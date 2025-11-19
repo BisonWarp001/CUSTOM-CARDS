@@ -1,7 +1,7 @@
 --Revival Slime
 local s,id=GetID()
 function s.initial_effect(c)
-	--Name becomes "Revival Slime" on the field
+	--Name becomes "Revival Jam" on the field
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
 	e0:SetCode(EFFECT_CHANGE_CODE)
