@@ -8,4 +8,4 @@ Ví un video en youtube https://www.youtube.com/watch?v=kpUpH0AWsgE&t=1167s que 
 
 Algunos cambios se encontrarán debido a problemas de programación pero la mayoria son los mismos. Sin fines de lucro.
 
-
+He hecho el script de 2 cartas que ví en reddit en este link: https://www.reddit.com/r/customyugioh/comments/1kelwwo/thoughts_on_these_2_egyptian_god_support_cards/, derechos reservados para el autor. Quizá encuentren algunas diferencias
