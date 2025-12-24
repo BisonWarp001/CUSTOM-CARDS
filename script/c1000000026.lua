@@ -45,12 +45,13 @@ end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	--Add Slifer to hand
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),
+		tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
 	if #g==0 then return end
 	Duel.SendtoHand(g,nil,REASON_EFFECT)
 	Duel.ConfirmCards(1-tp,g)
 
-	--Extra Tribute Summon this turn (Ancient Chant style)
+	--Extra Tribute Summon this turn (Ancient Chant compatible)
 	if Duel.GetFlagEffect(tp,id)~=0 then return end
 
 	local e1=Effect.CreateEffect(e:GetHandler())
@@ -67,7 +68,9 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	e2:SetCode(EFFECT_EXTRA_SET_COUNT)
 	Duel.RegisterEffect(e2,tp)
 
+	-- 🔧 Flags separados como Ancient Chant
 	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	Duel.RegisterFlagEffect(tp,id+1,RESET_PHASE|PHASE_END,0,1)
 end
 
 -------------------------------------------------
