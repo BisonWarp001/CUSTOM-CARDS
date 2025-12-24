@@ -1,0 +1,86 @@
+--Edict of the Annihilator God
+local s,id=GetID()
+
+function s.initial_effect(c)
+	--Add Obelisk + Extra Tribute Summon
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetTarget(s.thtg)
+	e1:SetOperation(s.thop)
+	c:RegisterEffect(e1)
+
+	--GY: Banish and Special Summon Tokens
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,2))
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_GRAVE)
+	e2:SetCost(aux.bfgcost)
+	e2:SetCondition(s.tkcon)
+	e2:SetOperation(s.tkop)
+	c:RegisterEffect(e2)
+end
+
+s.listed_names={10000000,1000000021}
+
+-------------------------------------------------
+-- Search Obelisk
+-------------------------------------------------
+function s.thfilter(c)
+	return c:IsCode(10000000) and c:IsAbleToHand()
+end
+
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
+end
+
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),
+		tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
+
+	--Extra Normal / Tribute Summon
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_EXTRA_SUMMON_COUNT)
+	e1:SetTargetRange(LOCATION_HAND,0)
+	e1:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,5))
+	e1:SetReset(RESET_PHASE|PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+
+	local e2=e1:Clone()
+	e2:SetCode(EFFECT_EXTRA_SET_COUNT)
+	Duel.RegisterEffect(e2,tp)
+end
+
+-------------------------------------------------
+-- GY Condition
+-------------------------------------------------
+function s.tkcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,10000000),
+		tp,LOCATION_MZONE,0,1,nil)
+end
+
+-------------------------------------------------
+-- Token Summon
+-------------------------------------------------
+function s.tkop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+
+	for i=1,2 do
+		local token=Duel.CreateToken(tp,1000000021)
+		Duel.SpecialSummonStep(token,0,tp,tp,false,false,POS_FACEUP)
+	end
+	Duel.SpecialSummonComplete()
+end
