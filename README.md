@@ -6,3 +6,4 @@ Solo seguir los siguientes pasos:
 3. Ingresar a EDOPRO y verificar que se descargue la información. En ocasiones requiere cerrar el juego y reiniciar.
 4. Por último, en editor del Deck, buscar el apartado "Formatos Alternativos" y seleccionar la limitación "Custom".
 5. Algunos Deck ya están hechos para hacer tests sin necesidad de crearlos desde cero.
+6. Si desean tener las cartas para siempre (en caso de que se borre desde GITHUB o se modifique), solo descarguen el archivo .zip del repositorio, y copien y peguen las carpetas dentro de EDOPRO. 
