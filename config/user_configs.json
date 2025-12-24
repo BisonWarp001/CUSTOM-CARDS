@@ -28,27 +28,14 @@
 		},
 		{
 			"url": "https://github.com/BisonWarp001/CUSTOM-CARDS",
-			"repo_name": "Nordic Cards",
-			"repo_path": "./repositories/customcards-nordic",
+			"repo_name": "BisonWarp Custom Cards",
+			"repo_path": "./repositories/customcards",
 			"script_path": "script",
 			"pics_path": "pics",
 			"data_path": "expansions",
-			"branch": "NORDIC-CARDS",
-			"should_update": true,
-			"should_read": true
-		},
-		{
-			"url": "https://github.com/BisonWarp001/CUSTOM-CARDS",
-			"repo_name": "Egyptian Gods Support",
-			"repo_path": "./repositories/customcards-egyptiangods",
-			"script_path": "script",
-			"pics_path": "pics",
-			"data_path": "expansions",
-			"branch": "EGYPTIANGODS-SUPPORT",
 			"should_update": true,
 			"should_read": true
 		}
-
 	],
 	"urls": [
 		{
