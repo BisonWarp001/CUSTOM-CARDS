@@ -1,5 +1,4 @@
 --Orichalcos Shynolos
---By Jackmoonward
 local s,id=GetID()
 function s.initial_effect(c)
 

@@ -1,5 +1,4 @@
 --Slifer the Sky Dragon (Anime)
---Scripted by You
 local s,id=GetID()
 function s.initial_effect(c)
      --Requires 3 tributes to Normal Summon (cannot be Set)

@@ -73,20 +73,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	tc:RegisterEffect(eh)
 
 	-------------------------------------------------------
-	-- No puede ser tributado excepto por DIVINE
-	-------------------------------------------------------
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UNRELEASABLE_SUM)
-	e1:SetValue(s.relval)
-	e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-	tc:RegisterEffect(e1)
-
-	local e1b=e1:Clone()
-	e1b:SetCode(EFFECT_UNRELEASABLE_NONSUM)
-	tc:RegisterEffect(e1b)
-
-	-------------------------------------------------------
 	-- No puede ser usado como material excepto DIVINE
 	-------------------------------------------------------
 	local e2=Effect.CreateEffect(c)
@@ -127,8 +113,8 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	e5:SetType(EFFECT_TYPE_IGNITION)
 	e5:SetRange(LOCATION_MZONE)
 	e5:SetCountLimit(1)
-	e5:SetCost(s.atkcost)
-	e5:SetOperation(s.atkop)
+	e5:SetCost(s.tributecost)
+	e5:SetOperation(s.tributeop)
 	e5:SetReset(RESET_EVENT|RESETS_STANDARD)
 
 	tc:RegisterEffect(e5)
@@ -137,10 +123,6 @@ end
 -----------------------------------------------------------
 -- Funciones auxiliares
 -----------------------------------------------------------
-
-function s.relval(e,c)
-	return not c:IsAttribute(ATTRIBUTE_DIVINE)
-end
 
 function s.matval(e,c)
 	return not c:IsAttribute(ATTRIBUTE_DIVINE)
@@ -155,53 +137,25 @@ function s.stimmune(e,re)
 	return re:IsActiveType(TYPE_SPELL+TYPE_TRAP)
 end
 
------------------------------------------------------------
--- COSTE: tributar cualquier número de monstruos
------------------------------------------------------------
-function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(aux.TRUE,tp,LOCATION_MZONE,0,c)
-	if chk==0 then return #g>0 end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local sg=g:Select(tp,1,#g,nil)
-
-	-- Guardamos exactamente los seleccionados
-	e:SetLabelObject(sg)
-	Duel.Release(sg,REASON_COST)
+-- Tributes for Ra
+function s.tributecost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.CheckReleaseGroup(tp,aux.TRUE,1,e:GetHandler()) end
+    local g=Duel.SelectReleaseGroup(tp,aux.TRUE,1,99,e:GetHandler())
+    e:SetLabel(g:GetSum(Card.GetAttack))
+    Duel.Release(g,REASON_COST)
 end
-
-
------------------------------------------------------------
--- Operación: usar ATK/DEF ACTUAL que tenían en el campo
------------------------------------------------------------
-function s.atkop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local g=e:GetLabelObject()
-	if not g or #g==0 then return end
-
-	local atk,def=0,0
-	for tc in g:Iter() do
-		atk=atk+math.max(tc:GetAttack(),0)
-		def=def+math.max(tc:GetDefense(),0)
-	end
-
-	if atk>0 then
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_ATTACK)
-		e1:SetValue(atk)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-		c:RegisterEffect(e1)
-	end
-
-	if def>0 then
-		local e2=Effect.CreateEffect(c)
-		e2:SetType(EFFECT_TYPE_SINGLE)
-		e2:SetCode(EFFECT_UPDATE_DEFENSE)
-		e2:SetValue(def)
-		e2:SetReset(RESET_EVENT|RESETS_STANDARD)
-		c:RegisterEffect(e2)
-	end
+function s.tributeop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local val=e:GetLabel()
+    if not c:IsRelateToEffect(e) or val<=0 then return end
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_UPDATE_ATTACK)
+    e1:SetValue(val)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+    c:RegisterEffect(e1)
+    local e2=e1:Clone()
+    e2:SetCode(EFFECT_UPDATE_DEFENSE)
+    c:RegisterEffect(e2)
 end
 

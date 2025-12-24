@@ -142,7 +142,9 @@ end
 -- EFFECT 3: Search Spell/Trap mentioning Obelisk
 ------------------------------------------------
 function s.thfilter(c)
-	return c:IsAbleToHand() and c:ListsCode(10000000)
+	return c:IsAbleToHand()
+		and c:IsSpellTrap()
+		and c:ListsCode(10000000)
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then

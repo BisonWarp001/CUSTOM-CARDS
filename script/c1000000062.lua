@@ -1,4 +1,4 @@
--- Gods' Unleashed Power
+-- Unleashed Divine Power
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -98,17 +98,6 @@ end
 -- COMMON PROTECTIONS
 -----------------------------------------------------------
 function s.apply_common(tc,c)
-	-- Cannot be Tributed except DIVINE
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UNRELEASABLE_SUM)
-	e1:SetValue(s.relval)
-	e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-	tc:RegisterEffect(e1)
-
-	local e1b=e1:Clone()
-	e1b:SetCode(EFFECT_UNRELEASABLE_NONSUM)
-	tc:RegisterEffect(e1b)
 
 	-- Cannot be material except DIVINE
 	local e2=Effect.CreateEffect(c)
@@ -185,8 +174,8 @@ function s.apply_ra(tc,c)
 	e:SetType(EFFECT_TYPE_IGNITION)
 	e:SetRange(LOCATION_MZONE)
 	e:SetCountLimit(1)
-	e:SetCost(s.atkcost)
-	e:SetOperation(s.atkop)
+	e:SetCost(s.tributecost)
+	e:SetOperation(s.tributeop)
 	e:SetReset(RESET_EVENT | RESETS_STANDARD)
 	tc:RegisterEffect(e)
 end
@@ -194,10 +183,6 @@ end
 -----------------------------------------------------------
 -- AUXILIARY
 -----------------------------------------------------------
-function s.relval(e,c)
-	return not c:IsAttribute(ATTRIBUTE_DIVINE)
-end
-
 function s.matval(e,c)
 	return not c:IsAttribute(ATTRIBUTE_DIVINE)
 end
@@ -279,44 +264,24 @@ function s.bpop(e,tp)
 	end
 end
 
------------------------------------------------------------
--- RA ATK / DEF GAIN
------------------------------------------------------------
-function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(aux.TRUE,tp,LOCATION_MZONE,0,e:GetHandler())
-	if chk==0 then return #g>0 end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local sg=g:Select(tp,1,#g,nil)
-	e:SetLabelObject(sg)
-	Duel.Release(sg,REASON_COST)
+-- Tributes for Ra
+function s.tributecost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.CheckReleaseGroup(tp,aux.TRUE,1,e:GetHandler()) end
+    local g=Duel.SelectReleaseGroup(tp,aux.TRUE,1,99,e:GetHandler())
+    e:SetLabel(g:GetSum(Card.GetAttack))
+    Duel.Release(g,REASON_COST)
 end
-
-function s.atkop(e,tp)
-	local g=e:GetLabelObject()
-	if not g then return end
-
-	local atk,def=0,0
-	for tc in g:Iter() do
-		atk=atk+math.max(tc:GetAttack(),0)
-		def=def+math.max(tc:GetDefense(),0)
-	end
-
-	if atk>0 then
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_ATTACK)
-		e1:SetValue(atk)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-		e:GetHandler():RegisterEffect(e1)
-	end
-
-	if def>0 then
-		local e2=Effect.CreateEffect(e:GetHandler())
-		e2:SetType(EFFECT_TYPE_SINGLE)
-		e2:SetCode(EFFECT_UPDATE_DEFENSE)
-		e2:SetValue(def)
-		e2:SetReset(RESET_EVENT|RESETS_STANDARD)
-		e:GetHandler():RegisterEffect(e2)
-	end
+function s.tributeop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local val=e:GetLabel()
+    if not c:IsRelateToEffect(e) or val<=0 then return end
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_UPDATE_ATTACK)
+    e1:SetValue(val)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+    c:RegisterEffect(e1)
+    local e2=e1:Clone()
+    e2:SetCode(EFFECT_UPDATE_DEFENSE)
+    c:RegisterEffect(e2)
 end

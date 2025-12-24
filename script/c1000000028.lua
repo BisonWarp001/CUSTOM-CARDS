@@ -73,26 +73,11 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	tc:RegisterEffect(eh)
 
 	-------------------------------------------------------
-	-- No puede ser tributado excepto por DIVINE
-	-------------------------------------------------------
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UNRELEASABLE_SUM)
-	e1:SetValue(s.relval)
-	e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-	tc:RegisterEffect(e1)
-
-	local e1b=e1:Clone()
-	e1b:SetCode(EFFECT_UNRELEASABLE_NONSUM)
-	tc:RegisterEffect(e1b)
-
-	-------------------------------------------------------
 	-- No puede ser usado como material excepto DIVINE
 	-------------------------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_CANNOT_BE_MATERIAL)
-	e2:SetValue(s.matval)
 	e2:SetReset(RESET_EVENT|RESETS_STANDARD)
 	tc:RegisterEffect(e2)
 
@@ -141,14 +126,6 @@ end
 -----------------------------------------------------------
 -- Funciones auxiliares
 -----------------------------------------------------------
-function s.relval(e,c)
-	return not c:IsAttribute(ATTRIBUTE_DIVINE)
-end
-
-function s.matval(e,c)
-	return not c:IsAttribute(ATTRIBUTE_DIVINE)
-end
-
 function s.immval(e,re)
 	return re:IsActiveType(TYPE_MONSTER)
 		and not re:GetHandler():IsAttribute(ATTRIBUTE_DIVINE)
