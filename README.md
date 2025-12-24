@@ -2,3 +2,10 @@ Cartas Custom para EDOPRO por BisonWarp001
   Algunas cartas fueron recopiladas de foros o videos de internet y programadas para EDOPRO, con la finalidad de divertir.
 
 Se ha tomado cartas de este foro https://www.reddit.com/r/customyugioh/comments/16gxj76/egyptian_god_support/?tl=es-419 solo que se modificaron algunos de sus efectos para adaptarlos a cartas hechas por mí. 
+
+Todos los derechos reservados para BatMed. 
+Ví un video en youtube https://www.youtube.com/watch?v=kpUpH0AWsgE&t=1167s que creó BatMed. Recreé las cartas para jugar en edopro, Todo está basado en sus cartas. 
+
+Algunos cambios se encontrarán debido a problemas de programación pero la mayoria son los mismos. Sin fines de lucro.
+
+
