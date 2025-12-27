@@ -116,14 +116,14 @@ function s.apply_common(tc,c)
 	e3:SetReset(RESET_EVENT|RESETS_STANDARD)
 	tc:RegisterEffect(e3)
 
-	-- Immune to activated Spell/Trap effects
+	-- Cannot be destroyed by Spell/Trap effects
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetCode(EFFECT_IMMUNE_EFFECT)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetValue(s.stimmune)
+	e4:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e4:SetValue(s.stindes)
 	e4:SetReset(RESET_EVENT|RESETS_STANDARD)
 	tc:RegisterEffect(e4)
+
 end
 
 -----------------------------------------------------------
@@ -137,6 +137,7 @@ function s.apply_slifer(tc,c)
 	e:SetRange(LOCATION_MZONE)
 	e:SetCode(EVENT_SUMMON_SUCCESS)
 	e:SetCondition(s.defcon)
+	e:SetProperty(EFFECT_FLAG_CANNOT_NEGATE+EFFECT_FLAG_CANNOT_INACTIVATE)
 	e:SetTarget(s.deftg)
 	e:SetOperation(s.defop)
 	e:SetReset(RESET_EVENT | RESETS_STANDARD)
@@ -158,6 +159,7 @@ function s.apply_obelisk(tc,c)
 	e:SetCode(EVENT_FREE_CHAIN)
 	e:SetRange(LOCATION_MZONE)
 	e:SetCondition(s.bpcon)
+	e:SetProperty(EFFECT_FLAG_CANNOT_NEGATE+EFFECT_FLAG_CANNOT_INACTIVATE)
 	e:SetCost(s.bpcost)
 	e:SetOperation(s.bpop)
 	e:SetReset(RESET_EVENT | RESETS_STANDARD)
@@ -175,6 +177,7 @@ function s.apply_ra(tc,c)
 	e:SetRange(LOCATION_MZONE)
 	e:SetCountLimit(1)
 	e:SetCost(s.tributecost)
+	e:SetProperty(EFFECT_FLAG_CANNOT_NEGATE+EFFECT_FLAG_CANNOT_INACTIVATE)
 	e:SetOperation(s.tributeop)
 	e:SetReset(RESET_EVENT | RESETS_STANDARD)
 	tc:RegisterEffect(e)
@@ -192,7 +195,7 @@ function s.immval(e,re)
 		and not re:GetHandler():IsAttribute(ATTRIBUTE_DIVINE)
 end
 
-function s.stimmune(e,re)
+function s.stindes(e,re,tp)
 	return re:IsActiveType(TYPE_SPELL+TYPE_TRAP)
 end
 
@@ -240,6 +243,7 @@ end
 -----------------------------------------------------------
 function s.bpcon(e,tp)
 	return Duel.IsBattlePhase()
+		and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
 end
 
 function s.bpcost(e,tp,eg,ep,ev,re,r,rp,chk)
