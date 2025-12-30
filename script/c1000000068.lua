@@ -1,105 +1,120 @@
--- The Eraser's Dominion
+--The Destruction of the Eraser God
 local s,id=GetID()
-
 function s.initial_effect(c)
-	-- Activate: Search + Extra Tribute Summon
+	--Activate: Add 1 "The Wicked Eraser", then Normal Summon
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetCountLimit(1,{id,0})
 	e1:SetTarget(s.thtg)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 
-	-- GY: Banish; damage when Eraser destroys cards
+	--GY Quick Effect: Banish, then inflict damage this turn
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_GRAVE)
+	e2:SetCountLimit(1,{id,1}) 
+	e2:SetCondition(s.gycon)
 	e2:SetCost(aux.bfgcost)
-	e2:SetCondition(s.damcon)
-	e2:SetOperation(s.damop)
+	e2:SetOperation(s.gyop)
 	c:RegisterEffect(e2)
 end
 
-s.listed_names={57793869} -- The Wicked Eraser
+s.listed_names={57793869}
 
 -------------------------------------------------
--- Search Wicked Eraser
+-- Search + Normal Summon
 -------------------------------------------------
+
 function s.thfilter(c)
 	return c:IsCode(57793869) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil)
+		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
 end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	-- Add Eraser
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
-	if #g==0 then return end
-	Duel.SendtoHand(g,nil,REASON_EFFECT)
-	Duel.ConfirmCards(1-tp,g)
+	local tc=Duel.SelectMatchingCard(
+		tp,
+		aux.NecroValleyFilter(s.thfilter),
+		tp,
+		LOCATION_DECK|LOCATION_GRAVE,
+		0,1,1,nil
+	):GetFirst()
+	if not tc then return end
 
-	-- Extra Tribute Summon (Ancient Chant pattern)
-	if Duel.GetFlagEffect(tp,id)~=0 then return end
-
-	local c=e:GetHandler()
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_EXTRA_SUMMON_COUNT)
-	e1:SetTargetRange(LOCATION_HAND,0)
-	e1:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,5))
-	e1:SetValue(0x1)
-	e1:SetReset(RESET_PHASE|PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-
-	local e2=e1:Clone()
-	e2:SetCode(EFFECT_EXTRA_SET_COUNT)
-	Duel.RegisterEffect(e2,tp)
-
-	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	if Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 then
+		Duel.ConfirmCards(1-tp,tc)
+		if tc:IsSummonable(true,nil)
+			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+			Duel.BreakEffect()
+			Duel.Summon(tp,tc,true,nil)
+		end
+	end
 end
 
 -------------------------------------------------
--- GY damage effect
+-- GY Effect: Damage Setup
 -------------------------------------------------
-function s.eraserfilter(c)
-	return c:IsFaceup() and c:IsCode(57793869)
+
+function s.gycon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_MZONE,0,1,nil,57793869)
 end
 
-function s.damcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(s.eraserfilter,tp,LOCATION_MZONE,0,1,nil)
-end
-
-function s.damop(e,tp,eg,ep,ev,re,r,rp)
+function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
-	-- Register damage listener for this turn
+	-- 1) Detect when The Wicked Eraser is destroyed
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_DESTROYED)
-	e1:SetCondition(s.damcond)
-	e1:SetOperation(s.damcalc)
-	e1:SetReset(RESET_PHASE|PHASE_END)
+	e1:SetCondition(s.markcon)
+	e1:SetOperation(s.markop)
+	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
+
+	-- 2) Detect when its effect destroys cards
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EVENT_CHAIN_SOLVED)
+	e2:SetCondition(s.damcon)
+	e2:SetOperation(s.damop)
+	e2:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e2,tp)
 end
 
--- Check destruction by Wicked Eraser's effect
-function s.damcond(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re and re:GetHandler()
-	return rc and rc:IsCode(57793869) and r&REASON_EFFECT~=0
+-- Mark that Wicked Eraser was destroyed
+function s.markcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(function(c)
+		return c:IsCode(57793869) and c:IsReason(REASON_DESTROY)
+	end,1,nil)
 end
 
-function s.damcalc(e,tp,eg,ep,ev,re,r,rp)
-	local ct=eg:FilterCount(Card.IsReason, nil, REASON_EFFECT)
+function s.markop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)
+end
+
+-- Check if its effect destroyed cards AFTER being destroyed
+function s.damcon(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetFlagEffect(tp,id)==0 then return false end
+	if not re then return false end
+	return re:GetHandler():IsCode(57793869)
+end
+
+function s.damop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetOperatedGroup()
+	if not g then return end
+	local ct=g:FilterCount(function(c)
+		return c:IsReason(REASON_EFFECT) and c:IsReason(REASON_DESTROY)
+	end,nil)
 	if ct>0 then
 		Duel.Damage(1-tp,ct*1000,REASON_EFFECT)
 	end
