@@ -1,4 +1,4 @@
---The Destruction of the Eraser God
+--The Curse of Destruction
 local s,id=GetID()
 function s.initial_effect(c)
 	--Activate: Add 1 "The Wicked Eraser", then Normal Summon
@@ -111,10 +111,15 @@ end
 
 function s.damop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetOperatedGroup()
-	if not g then return end
+	if not g or not re then return end
+
 	local ct=g:FilterCount(function(c)
-		return c:IsReason(REASON_EFFECT) and c:IsReason(REASON_DESTROY)
+		return c:IsReason(REASON_EFFECT)
+			and c:IsReason(REASON_DESTROY)
+			and c:GetReasonEffect()
+			and c:GetReasonEffect():GetHandler():IsCode(57793869)
 	end,nil)
+
 	if ct>0 then
 		Duel.Damage(1-tp,ct*1000,REASON_EFFECT)
 	end

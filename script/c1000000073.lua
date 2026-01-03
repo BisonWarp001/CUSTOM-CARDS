@@ -59,7 +59,9 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 
 	-- Extra Tribute Summon (generic)
 	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetDescription(aux.Stringid(id,2))
 	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
 	e1:SetCode(EFFECT_EXTRA_SUMMON_COUNT)
 	e1:SetTargetRange(LOCATION_HAND,0)
 	e1:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,5))
@@ -70,6 +72,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_EXTRA_SET_COUNT)
 	Duel.RegisterEffect(e2,tp)
+
 end
 
 -------------------------------------------------

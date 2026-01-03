@@ -2,13 +2,13 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-	--Activation (no effect)
+	--Activation
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
 
-	--Effect 1: Once per turn, add or send to GY
+	--Effect 1: Add or send to GY
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TOGRAVE)
@@ -40,6 +40,7 @@ s.listed_names={21208154,62180201,57793869}
 function s.altarfilter(c)
 	return c:IsSpellTrap()
 		and c:ListsCode(21208154,62180201,57793869)
+		and not c:IsCode(id)
 end
 
 -------------------------------------------------
@@ -72,6 +73,7 @@ function s.setfilter(c)
 	return c:IsSpellTrap()
 		and c:ListsCode(21208154,62180201,57793869)
 		and c:IsSSetable()
+		and not c:IsCode(id)
 end
 
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
