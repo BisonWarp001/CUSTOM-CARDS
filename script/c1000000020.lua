@@ -1,4 +1,3 @@
---Gargoyle Slime
 local s,id=GetID()
 local TOKEN_SLIME=1000000021
 
@@ -34,30 +33,27 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 
 	------------------------------------------------
-	-- 3) If Tributed or sent to GY → Search Obelisk S/T
+	-- 3) If sent to the GY → Search Obelisk S/T
 	------------------------------------------------
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_RELEASE)
+	e3:SetCode(EVENT_TO_GRAVE)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCountLimit(1,id+200)
 	e3:SetTarget(s.thtg)
 	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
-
-	local e3b=e3:Clone()
-	e3b:SetCode(EVENT_TO_GRAVE)
-	c:RegisterEffect(e3b)
 end
 
 ------------------------------------------------
--- EFFECT 1: SS if added to hand except draw
+-- EFFECT 1
 ------------------------------------------------
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+function s.spcon(e)
 	return not e:GetHandler():IsReason(REASON_DRAW)
 end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -65,7 +61,8 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,tp,0)
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.spop(e,tp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
@@ -73,7 +70,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ------------------------------------------------
--- EFFECT 2: Lose ATK → Summon Slime Tokens
+-- EFFECT 2
 ------------------------------------------------
 function s.tkcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():GetAttack()>=1000
@@ -81,29 +78,29 @@ end
 
 function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local atk=e:GetHandler():GetAttack()
-	local max_ct=math.floor(atk/1000)
+	local ct=math.floor(atk/1000)
 	if chk==0 then
-		return max_ct>0
+		return ct>0
 			and Duel.GetLocationCount(tp,LOCATION_MZONE)>=1
 			and Duel.IsPlayerCanSpecialSummonMonster(
 				tp,TOKEN_SLIME,0,
-				TYPE_TOKEN,
-				500,500,1,RACE_AQUA,ATTRIBUTE_WATER
+				TYPE_TOKEN,500,500,1,
+				RACE_AQUA,ATTRIBUTE_WATER
 			)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,max_ct,tp,0)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,max_ct,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,ct,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,0)
 end
 
-function s.tkop(e,tp,eg,ep,ev,re,r,rp)
+function s.tkop(e,tp)
 	local c=e:GetHandler()
 	local atk=c:GetAttack()
 	if atk<1000 then return end
 
-	local max_ct=math.floor(atk/1000)
+	local ct=math.floor(atk/1000)
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,3))
-	local ct=Duel.AnnounceNumber(tp,table.unpack({1,max_ct}))
-	local lose=ct*1000
+	local sel=Duel.AnnounceNumber(tp,table.unpack({1,ct}))
+	local lose=sel*1000
 
 	if not (c:IsFaceup() and c:IsRelateToEffect(e) and c:GetAttack()>=lose) then return end
 
@@ -115,9 +112,9 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
 	c:RegisterEffect(e1)
 
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<ct then return end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<sel then return end
 
-	for i=1,ct do
+	for i=1,sel do
 		local token=Duel.CreateToken(tp,TOKEN_SLIME)
 		Duel.SpecialSummonStep(token,0,tp,tp,false,false,POS_FACEUP)
 	end
@@ -139,20 +136,22 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ------------------------------------------------
--- EFFECT 3: Search Spell/Trap mentioning Obelisk
+-- EFFECT 3
 ------------------------------------------------
 function s.thfilter(c)
-	return c:IsAbleToHand()
-		and c:IsSpellTrap()
+	return c:IsSpellTrap()
+		and c:IsAbleToHand()
 		and c:ListsCode(10000000)
 end
+
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.thop(e,tp)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 then
 		Duel.SendtoHand(g,tp,REASON_EFFECT)

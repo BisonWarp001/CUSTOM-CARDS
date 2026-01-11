@@ -1,9 +1,9 @@
---Unholy Synchronicity of the Wicked
+-- Unholy Synchronicity of the Wicked
 local s,id=GetID()
 
 function s.initial_effect(c)
 	--------------------------------
-	-- Activate (normal activation)
+	-- Activate
 	--------------------------------
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
@@ -11,54 +11,41 @@ function s.initial_effect(c)
 	c:RegisterEffect(e0)
 
 	--------------------------------
-	-- Cannot be destroyed by card effects
-	-- while you control any "The Wicked" monster
+	-- Avatar & Eraser unaffected by Dreadroot
 	--------------------------------
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
 	e1:SetRange(LOCATION_SZONE)
-	e1:SetCondition(s.indcon)
-	e1:SetValue(1)
+	e1:SetTargetRange(LOCATION_MZONE,0)
+	e1:SetTarget(s.immtg1)
+	e1:SetValue(s.immval1)
 	c:RegisterEffect(e1)
 
 	--------------------------------
-	-- Avatar & Eraser unaffected by Dreadroot's effects
+	-- Avatar & Dreadroot unaffected by Eraser
 	--------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetTargetRange(LOCATION_MZONE,0)
-	e2:SetTarget(s.immtg1)
-	e2:SetValue(s.immval1)
+	e2:SetTarget(s.immtg2)
+	e2:SetValue(s.immval2)
 	c:RegisterEffect(e2)
 
 	--------------------------------
-	-- Avatar & Dreadroot unaffected by Eraser's effects
+	-- If sent to GY: add 1 Wicked monster
 	--------------------------------
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_IMMUNE_EFFECT)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
-	e3:SetTarget(s.immtg2)
-	e3:SetValue(s.immval2)
+	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_TO_GRAVE)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetTarget(s.thtg)
+	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
-
-	--------------------------------
-	-- If sent to GY: add "Blasphemous Ascension"
-	--------------------------------
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
-	e4:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e4:SetCode(EVENT_TO_GRAVE)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetTarget(s.thtg)
-	e4:SetOperation(s.thop)
-	c:RegisterEffect(e4)
 
 	--------------------------------
 	-- You can only control 1
@@ -72,23 +59,8 @@ end
 s.listed_names={
 	21208154, -- The Wicked Avatar
 	62180201, -- The Wicked Dreadroot
-	57793869, -- The Wicked Eraser
-	-- Blasphemous Ascension (añade el ID si quieres listarlo)
+	57793869  -- The Wicked Eraser
 }
-
---------------------------------
--- Indestructible condition
---------------------------------
-function s.indfilter(c)
-	return c:IsFaceup() and c:IsCode(21208154,62180201,57793869)
-end
-function s.indcon(e)
-	return Duel.IsExistingMatchingCard(
-		s.indfilter,
-		e:GetHandlerPlayer(),
-		LOCATION_MZONE,0,1,nil
-	)
-end
 
 --------------------------------
 -- (1) Avatar & Eraser unaffected by Dreadroot
@@ -100,7 +72,7 @@ function s.immval1(e,te)
 	local tc=te:GetHandler()
 	return te:IsActiveType(TYPE_MONSTER)
 		and tc:IsControler(e:GetHandlerPlayer())
-		and tc:IsCode(62180201) -- Dreadroot
+		and tc:IsCode(62180201) -- The Wicked Dreadroot
 end
 
 --------------------------------
@@ -113,14 +85,15 @@ function s.immval2(e,te)
 	local tc=te:GetHandler()
 	return te:IsActiveType(TYPE_MONSTER)
 		and tc:IsControler(e:GetHandlerPlayer())
-		and tc:IsCode(57793869) -- Eraser
+		and tc:IsCode(57793869) -- The Wicked Eraser
 end
 
 --------------------------------
--- Search Blasphemous Ascension
+-- Search Wicked monster
 --------------------------------
 function s.thfilter(c)
-	return c:IsCode(1000000066) and c:IsAbleToHand()
+	return c:IsCode(21208154,62180201,57793869)
+		and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)

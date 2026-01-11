@@ -246,13 +246,19 @@ function s.bpcon(e,tp)
 		and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
 end
 
+function s.bpfilter(c,ob)
+	return c:IsReleasable() and c~=ob
+end
+
 function s.bpcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ob=e:GetHandler()
 	if chk==0 then
-		return Duel.CheckReleaseGroupCost(tp,Card.IsReleasable,2,false,nil,nil)
+		return Duel.CheckReleaseGroupCost(tp,s.bpfilter,2,false,nil,ob,ob)
 	end
-	local g=Duel.SelectReleaseGroupCost(tp,Card.IsReleasable,2,2,false,nil,nil)
+	local g=Duel.SelectReleaseGroupCost(tp,s.bpfilter,2,2,false,nil,ob,ob)
 	Duel.Release(g,REASON_COST)
 end
+
 
 function s.bpop(e,tp)
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
@@ -270,22 +276,50 @@ end
 
 -- Tributes for Ra
 function s.tributecost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.CheckReleaseGroup(tp,aux.TRUE,1,e:GetHandler()) end
-    local g=Duel.SelectReleaseGroup(tp,aux.TRUE,1,99,e:GetHandler())
-    e:SetLabel(g:GetSum(Card.GetAttack))
-    Duel.Release(g,REASON_COST)
+	if chk==0 then
+		return Duel.CheckReleaseGroup(tp,aux.TRUE,1,e:GetHandler())
+	end
+	local g=Duel.SelectReleaseGroup(tp,aux.TRUE,1,99,e:GetHandler())
+
+	local atk=0
+	local def=0
+	for tc in g:Iter() do
+		atk=atk+math.max(tc:GetAttack(),0)
+		def=def+math.max(tc:GetDefense(),0)
+	end
+
+	e:SetLabel(atk)
+	e:SetLabelObject({def=def})
+
+	Duel.Release(g,REASON_COST)
 end
+
+-----------------------------------------------------------
+-- RA APPLY GAIN (FIX)
+-----------------------------------------------------------
 function s.tributeop(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
-    local val=e:GetLabel()
-    if not c:IsRelateToEffect(e) or val<=0 then return end
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_SINGLE)
-    e1:SetCode(EFFECT_UPDATE_ATTACK)
-    e1:SetValue(val)
-    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-    c:RegisterEffect(e1)
-    local e2=e1:Clone()
-    e2:SetCode(EFFECT_UPDATE_DEFENSE)
-    c:RegisterEffect(e2)
+	local c=e:GetHandler()
+	local atk=e:GetLabel()
+	local obj=e:GetLabelObject()
+	local def=obj and obj.def or 0
+
+	if not c:IsRelateToEffect(e) then return end
+
+	if atk>0 then
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(atk)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		c:RegisterEffect(e1)
+	end
+
+	if def>0 then
+		local e2=Effect.CreateEffect(c)
+		e2:SetType(EFFECT_TYPE_SINGLE)
+		e2:SetCode(EFFECT_UPDATE_DEFENSE)
+		e2:SetValue(def)
+		e2:SetReset(RESET_EVENT|RESETS_STANDARD)
+		c:RegisterEffect(e2)
+	end
 end

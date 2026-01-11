@@ -10,7 +10,9 @@ function s.initial_effect(c)
 	e0:SetValue(31709826)
 	c:RegisterEffect(e0)
 
-	-- If Normal or Special Summoned: Add 1 "Slime" monster except "Little Jam"
+	--------------------------------------------------
+	-- If Normal or Special Summoned: Add Slime or Guardian Slime
+	--------------------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -25,35 +27,46 @@ function s.initial_effect(c)
 	e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e1b)
 
-	-- Tribute: Special Summon 1 "Slime" monster except "Little Jam" ignoring conditions
+	--------------------------------------------------
+	-- Tribute: Special Summon Slime or Guardian Slime
+	--------------------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,id+100)
+	e2:SetCountLimit(1,{id,1})
 	e2:SetCost(s.spcost)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 
-	-- GY effect: Shuffle 1 "Slime" into Deck or Extra Deck; Special Summon this card
+	--------------------------------------------------
+	-- GY: Shuffle Slime or Guardian Slime → SS this card
+	--------------------------------------------------
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetCategory(CATEGORY_TODECK+CATEGORY_SPECIAL_SUMMON)
 	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_GRAVE)
-	e3:SetCountLimit(1,id+200)
+	e3:SetCountLimit(1,{id,2})
 	e3:SetTarget(s.gytg)
 	e3:SetOperation(s.gyop)
 	c:RegisterEffect(e3)
 end
 
 --------------------------------------------------
--- Add "Slime" monster except itself
+-- Filters
+--------------------------------------------------
+function s.is_slime_or_guardian(c)
+	return (c:IsSetCard(0x54b) or c:IsCode(15771991))
+end
+
+--------------------------------------------------
+-- Add to hand
 --------------------------------------------------
 function s.thfilter(c)
-	return c:IsSetCard(0x54b)
+	return s.is_slime_or_guardian(c)
 		and c:IsMonster()
 		and not c:IsCode(id)
 		and c:IsAbleToHand()
@@ -82,10 +95,10 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 --------------------------------------------------
--- Special Summon "Slime" monster ignoring conditions
+-- Special Summon ignoring conditions
 --------------------------------------------------
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0x54b)
+	return s.is_slime_or_guardian(c)
 		and c:IsMonster()
 		and not c:IsCode(id)
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
@@ -107,10 +120,10 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------
--- GY revive Little Jam (shuffle another Slime)
+-- GY revive Little Jam
 --------------------------------------------------
 function s.gyfilter(c)
-	return c:IsSetCard(0x54b)
+	return s.is_slime_or_guardian(c)
 		and c:IsMonster()
 		and not c:IsCode(id)
 		and c:IsAbleToDeck()
