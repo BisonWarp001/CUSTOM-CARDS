@@ -86,7 +86,7 @@ end
 -- Token Summon
 -------------------------------------------------
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE) < 2 then return end
 
 	for i=1,2 do
 		local token=Duel.CreateToken(tp,1000000021)

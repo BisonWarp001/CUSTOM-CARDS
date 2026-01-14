@@ -70,66 +70,57 @@ function s.spop(e,tp)
 end
 
 ------------------------------------------------
--- EFFECT 2
+-- EFFECT 2 : Up to 2 Tokens
 ------------------------------------------------
 function s.tkcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetAttack()>=1000
+	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 end
 
 function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local atk=e:GetHandler():GetAttack()
-	local ct=math.floor(atk/1000)
 	if chk==0 then
-		return ct>0
-			and Duel.GetLocationCount(tp,LOCATION_MZONE)>=1
-			and Duel.IsPlayerCanSpecialSummonMonster(
-				tp,TOKEN_SLIME,0,
-				TYPE_TOKEN,500,500,1,
-				RACE_AQUA,ATTRIBUTE_WATER
-			)
+		return Duel.IsPlayerCanSpecialSummonMonster(
+			tp,TOKEN_SLIME,0,
+			TYPE_TOKEN,500,500,1,
+			RACE_AQUA,ATTRIBUTE_WATER
+		)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,ct,tp,0)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,2,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,0)
 end
 
-function s.tkop(e,tp)
+function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local atk=c:GetAttack()
-	if atk<1000 then return end
+	if not (c:IsFaceup() and c:IsRelateToEffect(e)) then return end
 
-	local ct=math.floor(atk/1000)
+	local ft=math.min(2,Duel.GetLocationCount(tp,LOCATION_MZONE))
+	if ft<=0 then return end
+
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,3))
-	local sel=Duel.AnnounceNumber(tp,table.unpack({1,ct}))
-	local lose=sel*1000
+	local ct=Duel.AnnounceNumber(tp,table.unpack({1,ft}))
 
-	if not (c:IsFaceup() and c:IsRelateToEffect(e) and c:GetAttack()>=lose) then return end
-
-	-- Reduce ATK
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
-	e1:SetValue(-lose)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
-	c:RegisterEffect(e1)
-
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<sel then return end
-
-	for i=1,sel do
+	for i=1,ct do
 		local token=Duel.CreateToken(tp,TOKEN_SLIME)
 		Duel.SpecialSummonStep(token,0,tp,tp,false,false,POS_FACEUP)
 	end
 	Duel.SpecialSummonComplete()
 
-	-- Extra Deck restriction
+	-- Lose ATK
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetValue(-ct*1000)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+	c:RegisterEffect(e1)
+
+	-- Extra Deck restriction (ONLY Egyptian God Slime)
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,4))
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
 	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
 	e2:SetTargetRange(1,0)
 	e2:SetTarget(function(e,c)
 		return c:IsLocation(LOCATION_EXTRA)
-			and not (c:IsRace(RACE_AQUA) and c:IsAttribute(ATTRIBUTE_WATER))
+			and not c:IsCode(42166000)
 	end)
 	e2:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e2,tp)
