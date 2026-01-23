@@ -149,22 +149,23 @@ function s.apply_slifer(tc,c)
 end
 
 -----------------------------------------------------------
--- OBELISK EFFECT
+-- OBELISK EFFECT (BANISH + HALF ATK DAMAGE)
 -----------------------------------------------------------
 function s.apply_obelisk(tc,c)
 	local e=Effect.CreateEffect(c)
 	e:SetDescription(aux.Stringid(id,2))
-	e:SetCategory(CATEGORY_DESTROY+CATEGORY_DAMAGE)
+	e:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
 	e:SetType(EFFECT_TYPE_QUICK_O)
 	e:SetCode(EVENT_FREE_CHAIN)
 	e:SetRange(LOCATION_MZONE)
-	e:SetCondition(s.bpcon)
+	e:SetCondition(s.obcon)
+	e:SetCost(s.obcost)
+	e:SetOperation(s.obop)
 	e:SetProperty(EFFECT_FLAG_CANNOT_NEGATE+EFFECT_FLAG_CANNOT_INACTIVATE)
-	e:SetCost(s.bpcost)
-	e:SetOperation(s.bpop)
-	e:SetReset(RESET_EVENT | RESETS_STANDARD)
+	e:SetReset(RESET_EVENT|RESETS_STANDARD)
 	tc:RegisterEffect(e)
 end
+
 
 -----------------------------------------------------------
 -- RA EFFECT
@@ -241,26 +242,23 @@ end
 -----------------------------------------------------------
 -- OBELISK BATTLE PHASE WIPE
 -----------------------------------------------------------
-function s.bpcon(e,tp)
-	return Duel.IsBattlePhase()
-		and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
+function s.obcon(e,tp)
+	return Duel.IsBattlePhase() and Duel.GetTurnPlayer()~=tp
 end
 
-function s.bpfilter(c,ob)
+function s.obfilter(c,ob)
 	return c:IsReleasable() and c~=ob
 end
 
-function s.bpcost(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.obcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local ob=e:GetHandler()
 	if chk==0 then
-		return Duel.CheckReleaseGroupCost(tp,s.bpfilter,2,false,nil,ob,ob)
+		return Duel.CheckReleaseGroupCost(tp,s.obfilter,2,false,nil,ob,ob)
 	end
-	local g=Duel.SelectReleaseGroupCost(tp,s.bpfilter,2,2,false,nil,ob,ob)
+	local g=Duel.SelectReleaseGroupCost(tp,s.obfilter,2,2,false,nil,ob,ob)
 	Duel.Release(g,REASON_COST)
 end
-
-
-function s.bpop(e,tp)
+function s.obop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
 	if #g==0 then return end
 
@@ -269,10 +267,11 @@ function s.bpop(e,tp)
 		atk=atk+math.max(tc:GetAttack(),0)
 	end
 
-	if Duel.Destroy(g,REASON_EFFECT)>0 then
-		Duel.Damage(1-tp,atk,REASON_EFFECT)
+	if Duel.Remove(g,POS_FACEUP,REASON_EFFECT)>0 then
+		Duel.Damage(1-tp,math.floor(atk/2),REASON_EFFECT)
 	end
 end
+
 
 -- Tributes for Ra
 function s.tributecost(e,tp,eg,ep,ev,re,r,rp,chk)
